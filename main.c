@@ -13,10 +13,30 @@
 #include "sokol_fetch.h"
 #include "sokol_glue.h"
 
-
+int32_t sokol_time_angelscript_module_native(asIScriptEngine* engine) {
+    int r = 0;
+    r = asEngine_RegisterGlobalFunction(engine, "void stm_setup()", stm_setup, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "uint64 stm_now()", stm_now, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "uint64 stm_diff(uint64 new_ticks, uint64 old_ticks)", stm_diff, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "uint64 stm_since(uint64 start_ticks)", stm_since, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "uint64 stm_laptime(uint64 &inout last_time)", stm_laptime, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "uint64 stm_round_to_common_refresh_rate(uint64 frame_ticks)", stm_round_to_common_refresh_rate, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "double stm_sec(uint64 ticks)", stm_sec, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "double stm_ms(uint64 ticks)", stm_ms, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "double stm_us(uint64 ticks)", stm_us, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "double stm_ns(uint64 ticks)", stm_ns, asCALL_CDECL, NULL);  assert(r >= 0);
+    return r;
+}
 
 int32_t sokol_app_angelscript_module_native(asIScriptEngine* engine) {
-
+    if (sizeof(int) == sizeof(int64_t)) {
+        asEngine_RegisterTypedef(engine, "nint", "int64");
+        asEngine_RegisterTypedef(engine, "nuint", "uint64");
+    }
+    else {
+        asEngine_RegisterTypedef(engine, "nint", "int");
+        asEngine_RegisterTypedef(engine, "nuint", "uint");
+    }
     int r = 0;
     r = asEngine_RegisterEnum(engine, "sapp_event_type");  assert(r >= 0);
     r = asEngine_RegisterEnumValue(engine, "sapp_event_type", "SAPP_EVENTTYPE_INVALID", SAPP_EVENTTYPE_INVALID);  assert(r >= 0);
@@ -202,11 +222,11 @@ int32_t sokol_app_angelscript_module_native(asIScriptEngine* engine) {
     r = asEngine_RegisterObjectProperty(engine, "sapp_event", "float mouse_dy", offsetof(sapp_event, mouse_dy)); assert(r >= 0);
     r = asEngine_RegisterObjectProperty(engine, "sapp_event", "float scroll_x", offsetof(sapp_event, scroll_x)); assert(r >= 0);
     r = asEngine_RegisterObjectProperty(engine, "sapp_event", "float scroll_y", offsetof(sapp_event, scroll_y)); assert(r >= 0);
-    r = asEngine_RegisterObjectProperty(engine, "sapp_event", "int num_touches", offsetof(sapp_event, num_touches)); assert(r >= 0);
-    r = asEngine_RegisterObjectProperty(engine, "sapp_event", "int window_width", offsetof(sapp_event, window_width)); assert(r >= 0);
-    r = asEngine_RegisterObjectProperty(engine, "sapp_event", "int window_height", offsetof(sapp_event, window_height)); assert(r >= 0);
-    r = asEngine_RegisterObjectProperty(engine, "sapp_event", "int framebuffer_width", offsetof(sapp_event, framebuffer_width)); assert(r >= 0);
-    r = asEngine_RegisterObjectProperty(engine, "sapp_event", "int framebuffer_height", offsetof(sapp_event, framebuffer_height)); assert(r >= 0);
+    r = asEngine_RegisterObjectProperty(engine, "sapp_event", "nint window_width", offsetof(sapp_event, window_width)); assert(r >= 0);
+    r = asEngine_RegisterObjectProperty(engine, "sapp_event", "nint window_height", offsetof(sapp_event, window_height)); assert(r >= 0);
+    r = asEngine_RegisterObjectProperty(engine, "sapp_event", "nint framebuffer_width", offsetof(sapp_event, framebuffer_width)); assert(r >= 0);
+    r = asEngine_RegisterObjectProperty(engine, "sapp_event", "nint framebuffer_height", offsetof(sapp_event, framebuffer_height)); assert(r >= 0);
+    r = asEngine_RegisterObjectProperty(engine, "sapp_event", "nint num_touches", offsetof(sapp_event, num_touches)); assert(r >= 0);
     r = asEngine_RegisterObjectProperty(engine, "sapp_event", "sapp_touchpoint touches0", offsetof(sapp_event, touches[0])); assert(r >= 0);
     r = asEngine_RegisterObjectProperty(engine, "sapp_event", "sapp_touchpoint touches1", offsetof(sapp_event, touches[1])); assert(r >= 0);
     r = asEngine_RegisterObjectProperty(engine, "sapp_event", "sapp_touchpoint touches2", offsetof(sapp_event, touches[2])); assert(r >= 0);
@@ -216,28 +236,89 @@ int32_t sokol_app_angelscript_module_native(asIScriptEngine* engine) {
     r = asEngine_RegisterObjectProperty(engine, "sapp_event", "sapp_touchpoint touches6", offsetof(sapp_event, touches[6])); assert(r >= 0);
     r = asEngine_RegisterObjectProperty(engine, "sapp_event", "sapp_touchpoint touches7", offsetof(sapp_event, touches[7])); assert(r >= 0);
 
+    r = asEngine_RegisterEnum(engine, "sapp_mouse_cursor");  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_DEFAULT", SAPP_MOUSECURSOR_DEFAULT);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_ARROW", SAPP_MOUSECURSOR_ARROW);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_IBEAM", SAPP_MOUSECURSOR_IBEAM);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_CROSSHAIR", SAPP_MOUSECURSOR_CROSSHAIR);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_POINTING_HAND", SAPP_MOUSECURSOR_POINTING_HAND);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_RESIZE_EW", SAPP_MOUSECURSOR_RESIZE_EW);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_RESIZE_NS", SAPP_MOUSECURSOR_RESIZE_NS);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_RESIZE_NWSE", SAPP_MOUSECURSOR_RESIZE_NWSE);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_RESIZE_NESW", SAPP_MOUSECURSOR_RESIZE_NESW);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_RESIZE_ALL", SAPP_MOUSECURSOR_RESIZE_ALL);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "SAPP_MOUSECURSOR_NOT_ALLOWED", SAPP_MOUSECURSOR_NOT_ALLOWED);  assert(r >= 0);
+    r = asEngine_RegisterEnumValue(engine, "sapp_mouse_cursor", "_SAPP_MOUSECURSOR_NUM", _SAPP_MOUSECURSOR_NUM);  assert(r >= 0);
+
+
+    r = asEngine_RegisterGlobalFunction(engine, "bool sapp_isvalid()", sapp_isvalid, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "nint sapp_width()", sapp_width, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "float sapp_widthf()", sapp_widthf, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "nint sapp_height()", sapp_height, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "float sapp_heightf()", sapp_heightf, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "nint sapp_color_format()", sapp_color_format, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "nint sapp_depth_format()", sapp_depth_format, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "nint sapp_sample_count()", sapp_sample_count, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "bool sapp_high_dpi()", sapp_high_dpi, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "float sapp_dpi_scale()", sapp_dpi_scale, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "void sapp_show_keyboard(bool show)", sapp_show_keyboard, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "bool sapp_keyboard_shown()", sapp_keyboard_shown, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "bool sapp_is_fullscreen()", sapp_is_fullscreen, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "void sapp_toggle_fullscreen()", sapp_toggle_fullscreen, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "void sapp_show_mouse(bool show)", sapp_show_mouse, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "bool sapp_mouse_shown()", sapp_mouse_shown, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "void sapp_lock_mouse(bool lock)", sapp_lock_mouse, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "bool sapp_mouse_locked()", sapp_mouse_locked, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "void sapp_set_mouse_cursor(sapp_mouse_cursor cursor)", sapp_set_mouse_cursor, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "sapp_mouse_cursor sapp_get_mouse_cursor()", sapp_get_mouse_cursor, asCALL_CDECL, NULL);  assert(r >= 0);
+//    r = asEngine_RegisterGlobalFunction(engine, "void* sapp_userdata()", sapp_userdata, asCALL_CDECL, NULL);  assert(r >= 0);
+//    r = asEngine_RegisterGlobalFunction(engine, "sapp_desc sapp_query_desc()", sapp_query_desc, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "void sapp_request_quit()", sapp_request_quit, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "void sapp_cancel_quit()", sapp_cancel_quit, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "void sapp_quit()", sapp_quit, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "void sapp_consume_event()", sapp_consume_event, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "uint64 sapp_frame_count()", sapp_frame_count, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "double sapp_frame_duration()", sapp_frame_duration, asCALL_CDECL, NULL);  assert(r >= 0);
+//    r = asEngine_RegisterGlobalFunction(engine, "void sapp_set_clipboard_string(const char* str)", sapp_set_clipboard_string, asCALL_CDECL, NULL);  assert(r >= 0);
+//    r = asEngine_RegisterGlobalFunction(engine, "const char* sapp_get_clipboard_string()", sapp_get_clipboard_string, asCALL_CDECL, NULL);  assert(r >= 0);
+//    r = asEngine_RegisterGlobalFunction(engine, "void sapp_set_window_title(const char* str)", sapp_set_window_title, asCALL_CDECL, NULL);  assert(r >= 0);
+//    r = asEngine_RegisterGlobalFunction(engine, "void sapp_set_icon(const sapp_icon_desc* icon_desc)", sapp_set_icon, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "nint sapp_get_num_dropped_files()", sapp_get_num_dropped_files, asCALL_CDECL, NULL);  assert(r >= 0);
+//    r = asEngine_RegisterGlobalFunction(engine, "const char* sapp_get_dropped_file_path(nint index)", sapp_get_dropped_file_path, asCALL_CDECL, NULL);  assert(r >= 0);
+
+    r = asEngine_RegisterGlobalFunction(engine, "bool sapp_gles2()", sapp_gles2, asCALL_CDECL, NULL);  assert(r >= 0);
+
+    r = asEngine_RegisterGlobalFunction(engine, "void sapp_html5_ask_leave_site(bool ask)", sapp_html5_ask_leave_site, asCALL_CDECL, NULL);  assert(r >= 0);
+    r = asEngine_RegisterGlobalFunction(engine, "uint32 sapp_html5_get_dropped_file_size(nint index)", sapp_html5_get_dropped_file_size, asCALL_CDECL, NULL);  assert(r >= 0);
+//    r = asEngine_RegisterGlobalFunction(engine, "void sapp_html5_fetch_dropped_file(const sapp_html5_fetch_request* request)", sapp_html5_fetch_dropped_file, asCALL_CDECL, NULL);  assert(r >= 0);
 
     return r;
 }
 
 int32_t sokol_gfx_angelscript_module_native(asIScriptEngine * engine) {
 
+    if (sizeof(int) == sizeof(int64_t)) {
+        asEngine_RegisterTypedef(engine, "nint", "int64");
+        asEngine_RegisterTypedef(engine, "nuint", "uint64");
+    }
+    else {
+        asEngine_RegisterTypedef(engine, "nint", "int");
+        asEngine_RegisterTypedef(engine, "nuint", "uint");
+    }
+   
     int r = 0;
-
-    r = asEngine_RegisterObjectType(engine, "size_t", sizeof(size_t), asOBJ_VALUE | asOBJ_POD);  assert( r >= 0 );
-
     r = asEngine_RegisterObjectType(engine, "sg_buffer", sizeof(sg_buffer), asOBJ_VALUE | asOBJ_POD);  assert( r >= 0 );
-    r = asEngine_RegisterObjectProperty(engine, "sg_buffer", "uint id", offsetof(sg_buffer, id)); assert( r >= 0 );
+    r = asEngine_RegisterObjectProperty(engine, "sg_buffer", "uint32 id", offsetof(sg_buffer, id)); assert( r >= 0 );
     r = asEngine_RegisterObjectType(engine, "sg_image", sizeof(sg_image), asOBJ_VALUE | asOBJ_POD);  assert(r >= 0);
-    r = asEngine_RegisterObjectProperty(engine, "sg_image", "uint id", offsetof(sg_image, id)); assert(r >= 0);
+    r = asEngine_RegisterObjectProperty(engine, "sg_image", "uint32 id", offsetof(sg_image, id)); assert(r >= 0);
     r = asEngine_RegisterObjectType(engine, "sg_shader", sizeof(sg_shader), asOBJ_VALUE | asOBJ_POD);  assert(r >= 0);
-    r = asEngine_RegisterObjectProperty(engine, "sg_shader", "uint id", offsetof(sg_shader, id)); assert(r >= 0);
+    r = asEngine_RegisterObjectProperty(engine, "sg_shader", "uint32 id", offsetof(sg_shader, id)); assert(r >= 0);
     r = asEngine_RegisterObjectType(engine, "sg_pipeline", sizeof(sg_pipeline), asOBJ_VALUE | asOBJ_POD);  assert(r >= 0);
-    r = asEngine_RegisterObjectProperty(engine, "sg_pipeline", "uint id", offsetof(sg_pipeline, id)); assert(r >= 0);
+    r = asEngine_RegisterObjectProperty(engine, "sg_pipeline", "uint32 id", offsetof(sg_pipeline, id)); assert(r >= 0);
     r = asEngine_RegisterObjectType(engine, "sg_pass", sizeof(sg_pass), asOBJ_VALUE | asOBJ_POD);  assert(r >= 0);
-    r = asEngine_RegisterObjectProperty(engine, "sg_pass", "uint id", offsetof(sg_pass, id)); assert(r >= 0);
+    r = asEngine_RegisterObjectProperty(engine, "sg_pass", "uint32 id", offsetof(sg_pass, id)); assert(r >= 0);
     r = asEngine_RegisterObjectType(engine, "sg_context", sizeof(sg_context), asOBJ_VALUE | asOBJ_POD);  assert(r >= 0);
-    r = asEngine_RegisterObjectProperty(engine, "sg_context", "uint id", offsetof(sg_context, id)); assert(r >= 0);
+    r = asEngine_RegisterObjectProperty(engine, "sg_context", "uint32 id", offsetof(sg_context, id)); assert(r >= 0);
 
     r = asEngine_RegisterObjectType(engine, "sg_color", sizeof(sg_color), asOBJ_VALUE | asOBJ_POD);  assert(r >= 0);
     r = asEngine_RegisterObjectProperty(engine, "sg_color", "float r", offsetof(sg_color, r)); assert(r >= 0);
@@ -271,9 +352,6 @@ int32_t sokol_gfx_angelscript_module_native(asIScriptEngine * engine) {
     r = asEngine_RegisterObjectProperty(engine, "sg_pass_action", "sg_color_attachment_action color2", offsetof(sg_pass_action, colors[2])); assert(r >= 0);
     r = asEngine_RegisterObjectProperty(engine, "sg_pass_action", "sg_color_attachment_action color3", offsetof(sg_pass_action, colors[3])); assert(r >= 0);
   
-
-
-
     /* setup and misc functions */
 //    r = asEngine_RegisterGlobalFunction(engine, "void sg_setup(sg_desc@+)", sg_setup , asCALL_CDECL, NULL);  assert( r >= 0 );
     r = asEngine_RegisterGlobalFunction(engine, "void sg_shutdown()", sg_shutdown , asCALL_CDECL, NULL);  assert( r >= 0 );
@@ -296,22 +374,22 @@ int32_t sokol_gfx_angelscript_module_native(asIScriptEngine * engine) {
     r = asEngine_RegisterGlobalFunction(engine, "void sg_destroy_pass(sg_pass pass)", sg_destroy_pass , asCALL_CDECL, NULL);  assert( r >= 0 );
 //     r = asEngine_RegisterGlobalFunction(engine, "void sg_update_buffer(sg_buffer buf, const sg_range@+)", sg_update_buffer , asCALL_CDECL, NULL);  assert( r >= 0 );
 //     r = asEngine_RegisterGlobalFunction(engine, "void sg_update_image(sg_image img, const sg_image_data@+)", sg_update_image , asCALL_CDECL, NULL);  assert( r >= 0 );
-//     r = asEngine_RegisterGlobalFunction(engine, "int sg_append_buffer(sg_buffer buf, const sg_range@+)", sg_append_buffer , asCALL_CDECL, NULL);  assert( r >= 0 );
-//     r = asEngine_RegisterGlobalFunction(engine, "bool sg_query_buffer_overflow(sg_buffer buf)", sg_query_buffer_overflow , asCALL_CDECL, NULL);  assert( r >= 0 );
-//     r = asEngine_RegisterGlobalFunction(engine, "bool sg_query_buffer_will_overflow(sg_buffer buf, size_t size)", sg_query_buffer_will_overflow , asCALL_CDECL, NULL);  assert( r >= 0 );
+//     r = asEngine_RegisterGlobalFunction(engine, "nint sg_append_buffer(sg_buffer buf, const sg_range@+)", sg_append_buffer , asCALL_CDECL, NULL);  assert( r >= 0 );
+    r = asEngine_RegisterGlobalFunction(engine, "bool sg_query_buffer_overflow(sg_buffer buf)", sg_query_buffer_overflow , asCALL_CDECL, NULL);  assert( r >= 0 );
+    r = asEngine_RegisterGlobalFunction(engine, "bool sg_query_buffer_will_overflow(sg_buffer buf, size_t size)", sg_query_buffer_will_overflow , asCALL_CDECL, NULL);  assert( r >= 0 );
 
     /* rendering functions */
-    r = asEngine_RegisterGlobalFunction(engine, "void sg_begin_default_pass(const sg_pass_action@+, int width, int height)", sg_begin_default_pass , asCALL_CDECL, NULL);  assert( r >= 0 );
+    r = asEngine_RegisterGlobalFunction(engine, "void sg_begin_default_pass(const sg_pass_action@+, nint width, nint height)", sg_begin_default_pass , asCALL_CDECL, NULL);  assert( r >= 0 );
     r = asEngine_RegisterGlobalFunction(engine, "void sg_begin_default_passf(const sg_pass_action@+, float width, float height)", sg_begin_default_passf , asCALL_CDECL, NULL);  assert( r >= 0 );
     r = asEngine_RegisterGlobalFunction(engine, "void sg_begin_pass(sg_pass pass, const sg_pass_action@+)", sg_begin_pass , asCALL_CDECL, NULL);  assert( r >= 0 );
-    r = asEngine_RegisterGlobalFunction(engine, "void sg_apply_viewport(int x, int y, int width, int height, bool origin_top_left)", sg_apply_viewport , asCALL_CDECL, NULL);  assert( r >= 0 );
+    r = asEngine_RegisterGlobalFunction(engine, "void sg_apply_viewport(nint x, nint y, nint width, nint height, bool origin_top_left)", sg_apply_viewport , asCALL_CDECL, NULL);  assert( r >= 0 );
     r = asEngine_RegisterGlobalFunction(engine, "void sg_apply_viewportf(float x, float y, float width, float height, bool origin_top_left)", sg_apply_viewportf , asCALL_CDECL, NULL);  assert( r >= 0 );
-    r = asEngine_RegisterGlobalFunction(engine, "void sg_apply_scissor_rect(int x, int y, int width, int height, bool origin_top_left)", sg_apply_scissor_rect , asCALL_CDECL, NULL);  assert( r >= 0 );
+    r = asEngine_RegisterGlobalFunction(engine, "void sg_apply_scissor_rect(nint x, nint y, nint width, nint height, bool origin_top_left)", sg_apply_scissor_rect , asCALL_CDECL, NULL);  assert( r >= 0 );
     r = asEngine_RegisterGlobalFunction(engine, "void sg_apply_scissor_rectf(float x, float y, float width, float height, bool origin_top_left)", sg_apply_scissor_rectf , asCALL_CDECL, NULL);  assert( r >= 0 );
     r = asEngine_RegisterGlobalFunction(engine, "void sg_apply_pipeline(sg_pipeline pip)", sg_apply_pipeline , asCALL_CDECL, NULL);  assert( r >= 0 );
     r = asEngine_RegisterGlobalFunction(engine, "void sg_apply_bindings(const sg_bindings@+)", sg_apply_bindings , asCALL_CDECL, NULL);  assert( r >= 0 );
-    r = asEngine_RegisterGlobalFunction(engine, "void sg_apply_uniforms(sg_shader_stage stage, int ub_index, const sg_range@+)", sg_apply_uniforms , asCALL_CDECL, NULL);  assert( r >= 0 );
-    r = asEngine_RegisterGlobalFunction(engine, "void sg_draw(int base_element, int num_elements, int num_instances)", sg_draw , asCALL_CDECL, NULL);  assert( r >= 0 );
+    r = asEngine_RegisterGlobalFunction(engine, "void sg_apply_uniforms(sg_shader_stage stage, nint ub_index, const sg_range@+)", sg_apply_uniforms , asCALL_CDECL, NULL);  assert( r >= 0 );
+    r = asEngine_RegisterGlobalFunction(engine, "void sg_draw(nint base_element, nint num_elements, nint num_instances)", sg_draw , asCALL_CDECL, NULL);  assert( r >= 0 );
     r = asEngine_RegisterGlobalFunction(engine, "void sg_end_pass()", sg_end_pass , asCALL_CDECL, NULL);  assert( r >= 0 );
     r = asEngine_RegisterGlobalFunction(engine, "void sg_commit()", sg_commit , asCALL_CDECL, NULL);  assert( r >= 0 );
 
@@ -374,10 +452,14 @@ int32_t sokol_gfx_angelscript_module_native(asIScriptEngine * engine) {
     return r;
 }
 
+
+
+
 static struct 
 {
     asIScriptEngine* engine;
     asIScriptContext* context;
+    asIScriptModule* module;
 
     asIScriptFunction* call_init;
     asIScriptFunction* call_fini;
@@ -388,7 +470,7 @@ static struct
 
 
 static void 
-MessageCallback(const asSMessageInfo* msg, void* param) {
+angelscript_message_callback(const asSMessageInfo* msg, void* param) {
     const char* type = "";
     switch (msg->type) {
     case asMSGTYPE_ERROR: type = "ERROR"; break;
@@ -400,33 +482,67 @@ MessageCallback(const asSMessageInfo* msg, void* param) {
 
 static void 
 main_init(void) {
-
+    int r = 0;
     fprintf(stdout, "Angelscript %s\n", asGetLibraryVersion());
-    fprintf(stdout, "    options %s\n", asGetLibraryOptions());
+    fprintf(stdout, "   options %s\n", asGetLibraryOptions());
 
     _state.engine = asCreateScriptEngine(ANGELSCRIPT_VERSION); assert(_state.engine != 0);
+    asEngine_SetMessageCallback( _state.engine, angelscript_message_callback, 0, asCALL_CDECL);
+//    asEngine_SetEngineProperty( _state.engine,asEP_AUTO_GARBAGE_COLLECT, 0);
+    asEngine_SetEngineProperty( _state.engine,asEP_USE_CHARACTER_LITERALS, 1); //to have 'c' mean a single char
+    asEngine_SetEngineProperty( _state.engine,asEP_ALLOW_MULTILINE_STRINGS, 1);
+    asEngine_SetEngineProperty(_state.engine, asEP_ALLOW_UNSAFE_REFERENCES, 1);
 
-   
+    sokol_time_angelscript_module_native(_state.engine);
+
+    _state.context = asEngine_RequestContext(_state.engine); assert(_state.context != 0);
+
+    _state.module = asEngine_GetModule(_state.engine, "script", asGM_ALWAYS_CREATE); assert(_state.module != 0);
+
+    r = asModule_AddScriptSection(_state.module, "", 
+        "uint64 testvalue = 0;\n"
+        "uint64 init(){ testvalue = stm_now(); return testvalue; }\n"
+           "uint64 fini(){ return testvalue; }\n"
+         "uint64 step(){ return stm_laptime(testvalue); }\n"
+        ,0,0
+    );
+
+    if(r == 0) {
+        r = asModule_Build(_state.module);
+         if(r == 0) {
+            _state.call_init = asModule_GetFunctionByDecl(_state.module,"uint64 init()");
+            _state.call_fini = asModule_GetFunctionByDecl(_state.module,"uint64 fini()");
+            _state.call_step = asModule_GetFunctionByDecl(_state.module,"uint64 step()");
+        }
+    }
+
     sg_desc graphics_desc = { 0 };
     graphics_desc.context = sapp_sgcontext();
     sg_setup(&graphics_desc);
+
+    stm_setup();
+
+    if (_state.context && _state.call_step) {
+        if (asContext_Prepare(_state.context,_state.call_init)>=0){
+            asContext_Execute(_state.context);
+            uint64_t test = asContext_GetReturnQWord(_state.context);
+            asContext_Unprepare(_state.context);
+            fprintf(stdout, "call init result %u\n", test);
+        }
+    }
 }
 
 static void 
 main_frame(void) {
-#if 0
-    if (_state.context) {
-        if (_state.call_step) {
 
-            if (_state.context->Prepare(_state.call_step) >= 0)
-            {
-                _state.context->Execute();
-                _state.context->Unprepare();
-            }
-
+    if (_state.context && _state.call_step) {
+        if (asContext_Prepare(_state.context, _state.call_step) >= 0) {
+            asContext_Execute(_state.context);
+            uint64_t test = asContext_GetReturnQWord(_state.context);
+            fprintf(stdout, "call step result %u\n", test);
+            asContext_Unprepare(_state.context);
         }
     }
-#endif
 
     sg_pass_action pass_action = { 0 };
     sg_begin_default_pass(&pass_action, sapp_width(), sapp_height());
@@ -438,30 +554,16 @@ main_frame(void) {
 static void
 main_cleanup(void) {
 
-   
-#if 0
-
-    if (_state.engine) {
-
-       
-
-
-        if (_state.context) {
-            if (_state.call_fini) {
-
-                if (_state.context->Prepare(_state.call_fini) >= 0)
-                {
-                    _state.context->Execute();
-                    _state.context->Unprepare();
-                }
-
-            }
-            _state.engine->ReturnContext(_state.context);
+     if (_state.context && _state.call_fini) {
+        if (asContext_Prepare(_state.context, _state.call_fini) >= 0) {
+            asContext_Execute(_state.context);
+            uint64_t test = asContext_GetReturnQWord(_state.context);
+            fprintf(stdout, "call fini result %u\n", test);
+            asContext_Unprepare(_state.context);
         }
-             
-         _state.engine->ShutDownAndRelease();
     }
-#endif
+
+    if (_state.engine && _state.context)  asEngine_ReturnContext(_state.engine, _state.context);
     if (_state.engine) asEngine_ShutDownAndRelease(_state.engine);
     sg_shutdown();
 }
